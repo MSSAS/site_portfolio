@@ -131,7 +131,7 @@ header[data-testid="stHeader"]{ background:transparent; }
     background:rgba(0,0,0,.03);
 }
 .section-title{ margin:10px 0 4px 0; }
-.tight li{ margin:.28rem 0; }
+.tight li{ margin:.28rem 1; }
 </style>
 """, unsafe_allow_html=True)
 
