@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 from collections import Counter
 from pathlib import Path
+from urllib.parse import quote_plus, unquote_plus
 
 import streamlit.components.v1 as components
 from supabase import create_client
@@ -166,21 +167,36 @@ page = st.sidebar.radio(
 # ===========================
 # helper: Кнопка «лог + открыть ссылку»
 # ===========================
+# --- helper: логируем и открываем ссылку в НОВОЙ вкладке ---
 def log_and_open(label: str, url: str, page_name: str, event_name: str, key: str):
     """
-    Одна кнопка: при клике логируем событие в Supabase и открываем ссылку в новой вкладке.
+    1) По клику логируем событие в Supabase
+    2) Кладём URL в session_state и делаем st.rerun()
+    3) После ререндера через JS открываем URL в новой вкладке (текущая остаётся)
     """
     if st.button(label, type="primary", key=key):
-        log_event(page_name, event_name)
-        st.session_state["_redirect_url"] = url
-        st.rerun()
+        try:
+            log_event(page_name, event_name, meta=url)
+        finally:
+            st.session_state["_newtab_url"] = url
+            st.rerun()
 
-    if st.session_state.get("_redirect_url"):
+    new_url = st.session_state.pop("_newtab_url", None)
+    if new_url:
+        # Откроет новую вкладку; текущая не трогаем
         components.html(
-            f"""<script>window.open("{st.session_state["_redirect_url"]}", "_blank");</script>""",
+            f"""
+            <script>
+              try {{
+                window.open("{new_url}", "_blank", "noopener,noreferrer");
+              }} catch (e) {{}}
+            </script>
+            """,
             height=0, width=0
         )
-        st.session_state["_redirect_url"] = None
+        # Фолбэк-кнопка, если вдруг браузер заблокировал (редко)
+        st.caption("Если новая вкладка не открылась, нажми 👉")
+        st.link_button("Открыть ссылку", new_url)
 
 # ===========================
 # СТРАНИЦЫ
