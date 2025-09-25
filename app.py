@@ -265,7 +265,7 @@ elif page == "Дашборды":
 
         img_path = Path(__file__).parent / "assets" / "sales_dashboard.png"
         if img_path.exists():
-            st.image(str(img_path), caption="Дашборд аналитики продаж", use_column_width=True)
+            st.image(str(img_path), caption="Дашборд аналитики продаж", use_container_width=True)
         else:
             st.info("Изображение не найдено. Помести файл в `assets/sales_dashboard.png`")
 
