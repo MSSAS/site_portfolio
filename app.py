@@ -1,42 +1,67 @@
-# app.py — Матвей Спицын: портфолио + site-analytics (Supabase)
+# app.py — Матвей Спицын: портфолио + site-analytics (Supabase, 1-user-1-vote)
 
-import time
-import uuid
-from datetime import datetime, timezone
-from collections import Counter
-
+# === 1. Импорт и СРАЗУ set_page_config ===
 import streamlit as st
-import streamlit.components.v1 as components
-from supabase import create_client
-
-# ===========================
-# Общая настройка страницы
-# ===========================
 st.set_page_config(
     page_title="Портфолио Матвея Спицына | Аналитик данных",
     page_icon="📊",
     layout="wide",
 )
 
+import time
+import uuid
+from datetime import datetime, timezone
+from collections import Counter
+
+import streamlit.components.v1 as components
+from supabase import create_client
+from streamlit_cookies_manager import EncryptedCookieManager
+
 # ===========================
 # Supabase client (URL/KEY из st.secrets)
-# В Streamlit Cloud добавь их в Settings → Secrets
 # ===========================
-SB_URL = st.secrets["SUPABASE_URL"]
-SB_KEY = st.secrets["SUPABASE_KEY"]
+SB_URL = st.secrets.get("SUPABASE_URL")
+SB_KEY = st.secrets.get("SUPABASE_KEY")
+if not SB_URL or not SB_KEY:
+    st.error("Нет секретов SUPABASE_URL / SUPABASE_KEY. Задай их в Settings → Secrets.")
+    st.stop()
 sb = create_client(SB_URL, SB_KEY)
+
+# ===========================
+# Cookies: персистентный visitor_id (для 1-user-1-vote и сессий)
+# ===========================
+COOKIE_PASSWORD = st.secrets.get("COOKIE_PASSWORD", "dev-only-unsafe")
+cookies = EncryptedCookieManager(prefix="msp_", password=COOKIE_PASSWORD)
+if not cookies.ready():
+    st.stop()
+
+def get_or_set_visitor_id() -> str:
+    vid = cookies.get("visitor_id")
+    if not vid:
+        vid = str(uuid.uuid4())
+        cookies["visitor_id"] = vid
+        cookies.save()
+    return vid
 
 # ===========================
 # Бизнес-слой: Votes + Analytics (sessions/events/durations)
 # ===========================
 
 # --- Votes ---
-def init_votes():
-    # Таблицы ты уже создал SQL-скриптом в Supabase; тут ничего не нужно.
-    pass
+def add_vote(choice: str) -> bool:
+    """
+    Пишем голос с voter_id из cookie. Возвращает True если голос учтён,
+    False — если пользователь уже голосовал (уникальный индекс сработал).
+    """
+    try:
+        sb.table("votes").insert({"choice": choice, "voter_id": st.session_state.visitor_id}).execute()
+        return True
+    except Exception:
+        return False
 
-def add_vote(choice: str):
-    sb.table("votes").insert({"choice": choice}).execute()
+def has_voted() -> bool:
+    r = sb.table("votes").select("id").eq("voter_id", st.session_state.visitor_id).limit(1).execute()
+    return bool(r.data)
 
 def get_counts():
     likes = sb.table("votes").select("id", count="exact", head=True).eq("choice", "like").execute().count or 0
@@ -44,12 +69,10 @@ def get_counts():
     return likes, dislikes
 
 # --- Analytics (sessions / events / durations) ---
-def init_analytics():
-    pass  # таблицы уже есть
-
 def ensure_session():
+    # visitor_id — из куки
     if "visitor_id" not in st.session_state:
-        st.session_state.visitor_id = str(uuid.uuid4())
+        st.session_state.visitor_id = get_or_set_visitor_id()
     if "session_id" not in st.session_state:
         st.session_state.session_id = str(uuid.uuid4())
         sb.table("sessions").upsert(
@@ -58,8 +81,8 @@ def ensure_session():
         ).execute()
 
 def touch_session():
-    sb.table("sessions").update({"last_seen": datetime.now(timezone.utc).isoformat()})\
-        .eq("session_id", st.session_state.session_id).execute()
+    sb.table("sessions").update({"last_seen": datetime.now(timezone.utc).isoformat()}) \
+      .eq("session_id", st.session_state.session_id).execute()
 
 def log_event(page: str, event_type: str, meta: str = None):
     sb.table("events").insert({
@@ -70,10 +93,11 @@ def log_event(page: str, event_type: str, meta: str = None):
 
 def add_time(page: str, seconds: int):
     # upsert по (session_id, page)
-    existing = sb.table("durations").select("seconds").eq("session_id", st.session_state.session_id).eq("page", page).execute()
+    existing = sb.table("durations").select("seconds") \
+        .eq("session_id", st.session_state.session_id).eq("page", page).execute()
     if existing.data:
         cur = existing.data[0].get("seconds", 0) or 0
-        sb.table("durations").update({"seconds": cur + int(seconds)})\
+        sb.table("durations").update({"seconds": cur + int(seconds)}) \
           .eq("session_id", st.session_state.session_id).eq("page", page).execute()
     else:
         sb.table("durations").insert({
@@ -100,15 +124,6 @@ def start_page_timer(current_page: str):
 def finalize_time_on_rerun():
     touch_session()
 
-# Голосование и сессии — базовая инициализация
-init_votes()
-init_analytics()
-ensure_session()
-if "voted" not in st.session_state:
-    st.session_state.voted = False
-if "vote_choice" not in st.session_state:
-    st.session_state.vote_choice = None
-
 # ===========================
 # CSS (левый край + чипсы + компактные списки)
 # ===========================
@@ -131,7 +146,10 @@ header[data-testid="stHeader"]{ background:transparent; }
     background:rgba(0,0,0,.03);
 }
 .section-title{ margin:10px 0 4px 0; }
-.tight li{ margin:.28rem 1; }
+.tight li{ margin:.28rem 1; }  /* фикс опечатки */
+/* увеличиваем горизонтальный зазор между колонками только в секции CTA */
+.cta-row [data-testid="column"]{ padding-right:48px; }   /* меняй 48px */
+.cta-row [data-testid="column"]:last-child{ padding-right:0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -158,9 +176,7 @@ def log_and_open(label: str, url: str, page_name: str, event_name: str, key: str
 
     if st.session_state.get("_redirect_url"):
         components.html(
-            f"""
-            <script>window.open("{st.session_state["_redirect_url"]}", "_blank");</script>
-            """,
+            f"""<script>window.open("{st.session_state["_redirect_url"]}", "_blank");</script>""",
             height=0, width=0
         )
         st.session_state["_redirect_url"] = None
@@ -207,23 +223,12 @@ if page == "Главная":
     )
 
     st.markdown("<h4 class='section-title'>Чем могу быть полезен</h4>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("""
+    st.markdown("""
 <ul class="tight">
 <li>Дашборды под задачи бизнеса (DataLens/Power BI)</li>
 <li>SQL-аналитика и регулярная отчётность</li>
 <li>Подготовка/проведение <b>A/B-тестов</b>, интерпретация результатов</li>
 <li>Быстрые прототипы гипотез и метрик</li>
-</ul>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.markdown("""
-<ul class="tight">
-<li>E-com, маркетплейсы, контент-продукты</li>
-<li>Метрики роста: CR, ARPU/ARPPU, Retention, Stickiness</li>
-<li>Гостиничный сегмент: ADR, RevPAR, TRevPAR</li>
-<li>Инструменты: ClickHouse, Python, BI, Airflow</li>
 </ul>
         """, unsafe_allow_html=True)
 
@@ -296,7 +301,7 @@ elif page == "Аналитика сайта":
 
     st.header("📊 Аналитика сайта (Supabase)")
 
-    # Голосование
+    # Голосование (1-user-1-vote)
     st.subheader("Оценка сайта")
     likes, dislikes = get_counts()
     total = likes + dislikes
@@ -307,16 +312,22 @@ elif page == "Аналитика сайта":
     with c2: st.metric("👎 Дизлайки", dislikes)
     with c3: st.metric("Одобрение", f"{approval:.0f}%")
 
-    if not st.session_state.voted:
-        b1, b2 = st.columns(2)
-        with b1:
-            if st.button("👍 Лайк", use_container_width=True):
-                add_vote("like"); st.session_state.voted=True; st.session_state.vote_choice="like"; st.rerun()
-        with b2:
-            if st.button("👎 Дизлайк", use_container_width=True):
-                add_vote("dislike"); st.session_state.voted=True; st.session_state.vote_choice="dislike"; st.rerun()
-    else:
-        st.success(f"Спасибо! Ваш выбор: **{'👍 Лайк' if st.session_state.vote_choice=='like' else '👎 Дизлайк'}**")
+    already_voted = has_voted()
+    b1, b2 = st.columns(2)
+    with b1:
+        if st.button("👍 Лайк", use_container_width=True, disabled=already_voted):
+            if add_vote("like"):
+                st.success("Спасибо за голос!")
+                st.rerun()
+            else:
+                st.info("Вы уже голосовали.")
+    with b2:
+        if st.button("👎 Дизлайк", use_container_width=True, disabled=already_voted):
+            if add_vote("dislike"):
+                st.success("Спасибо за голос!")
+                st.rerun()
+            else:
+                st.info("Вы уже голосовали.")
 
     st.divider()
     st.subheader("Посетители, сессии и события")
