@@ -333,18 +333,26 @@ elif page == "Аналитика сайта":
     st.subheader("Посетители, сессии и события")
 
     # агрегаты из Supabase
-    visitors = sb.table("sessions").select("visitor_id", count="exact", head=True).execute().count or 0
+    # Уникальные посетители (distinct visitor_id) — без аргумента distinct
+    vis_rows = sb.table("sessions").select("visitor_id").execute().data or []
+    visitors = len({r.get("visitor_id") for r in vis_rows if r.get("visitor_id")})
+
+    # Всего сессий
     sessions = sb.table("sessions").select("session_id", count="exact", head=True).execute().count or 0
 
-    pv_rows = sb.table("events").select("page").eq("event_type", "page_view").execute().data
-    pageviews = Counter([r["page"] for r in pv_rows])
+    # Просмотры страниц
+    pv_rows = sb.table("events").select("page").eq("event_type", "page_view").execute().data or []
+    pageviews = Counter([r["page"] for r in pv_rows if r.get("page")])
 
+    # Клики по CTA
     tg_clicks = sb.table("events").select("id", count="exact", head=True).eq("event_type","tg_click").execute().count or 0
     gh_clicks = sb.table("events").select("id", count="exact", head=True).eq("event_type","gh_click").execute().count or 0
     cv_clicks = sb.table("events").select("id", count="exact", head=True).eq("event_type","resume_click").execute().count or 0
 
-    dur_rows = sb.table("durations").select("page,seconds").execute().data
-    durations = {r["page"]: r["seconds"] for r in dur_rows}
+    # Время на страницах
+    dur_rows = sb.table("durations").select("page,seconds").execute().data or []
+    durations = {r["page"]: (r.get("seconds") or 0) for r in dur_rows if r.get("page")}
+
 
     d1, d2, d3, d4 = st.columns(4)
     with d1: st.metric("Уникальные посетители", visitors)
