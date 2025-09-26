@@ -344,50 +344,17 @@ elif page == "Аналитика сайта":
                 st.info("Вы уже голосовали.")
 
     st.divider()
-    st.subheader("Посетители, сессии и события")
+    st.subheader("Как пользуются моим сайтом")
 
-    # агрегаты из Supabase
-    # Уникальные посетители (distinct visitor_id) — без аргумента distinct
-    vis_rows = sb.table("sessions").select("visitor_id").execute().data or []
-    visitors = len({r.get("visitor_id") for r in vis_rows if r.get("visitor_id")})
+    iframe_code = """
+        <iframe title="DataLens" width="1700" height="610" src="https://datalens.yandex/27osxw8nptnmn"></iframe>
+        """
+    components.html(iframe_code, height=615)
 
-    # Всего сессий
-    sessions = sb.table("sessions").select("session_id", count="exact", head=True).execute().count or 0
-
-    # Просмотры страниц
-    pv_rows = sb.table("events").select("page").eq("event_type", "page_view").execute().data or []
-    pageviews = Counter([r["page"] for r in pv_rows if r.get("page")])
-
-    # Клики по CTA
-    tg_clicks = sb.table("events").select("id", count="exact", head=True).eq("event_type","tg_click").execute().count or 0
-    gh_clicks = sb.table("events").select("id", count="exact", head=True).eq("event_type","gh_click").execute().count or 0
-    cv_clicks = sb.table("events").select("id", count="exact", head=True).eq("event_type","resume_click").execute().count or 0
-
-    # Время на страницах
+    st.markdown("#### Ваше время на страницах (суммарно)")
+        # Время на страницах
     dur_rows = sb.table("durations").select("page,seconds").execute().data or []
     durations = {r["page"]: (r.get("seconds") or 0) for r in dur_rows if r.get("page")}
-
-
-    d1, d2, d3, d4 = st.columns(4)
-    with d1: st.metric("Уникальные посетители", visitors)
-    with d2: st.metric("Сессии", sessions)
-    with d3: st.metric("Клики в Telegram", tg_clicks)
-    with d4: st.metric("Клики GitHub", gh_clicks)
-
-    e1, e2, e3 = st.columns(3)
-    with e1: st.metric("Клики Резюме", cv_clicks)
-
-    home_pv = pageviews.get("Главная", 0)
-    ctr_tg = (tg_clicks / home_pv * 100) if home_pv else 0
-    ctr_gh = (gh_clicks / home_pv * 100) if home_pv else 0
-    ctr_cv = (cv_clicks / home_pv * 100) if home_pv else 0
-
-    c1, c2, c3 = st.columns(3)
-    with c1: st.metric("CTR Telegram (от Главной)", f"{ctr_tg:.1f}%")
-    with c2: st.metric("CTR GitHub (от Главной)", f"{ctr_gh:.1f}%")
-    with c3: st.metric("CTR Резюме (от Главной)", f"{ctr_cv:.1f}%")
-
-    st.markdown("#### Время на страницах (суммарно)")
     cols = st.columns(5)
     pages_list = ["Главная", "Дашборды", "A/B-тесты", "Аналитика сайта", "Контакты"]
     for i, p in enumerate(pages_list):
