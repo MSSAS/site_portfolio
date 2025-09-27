@@ -149,9 +149,6 @@ header[data-testid="stHeader"]{ background:transparent; }
 }
 .section-title{ margin:10px 0 4px 0; }
 .tight li{ margin:.28rem 1; }  /* фикс опечатки */
-/* увеличиваем горизонтальный зазор между колонками только в секции CTA */
-.cta-row [data-testid="column"]{ padding-right:48px; }   /* меняй 48px */
-.cta-row [data-testid="column"]:last-child{ padding-right:0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -248,7 +245,7 @@ if page == "Главная":
 
     # CTA: 3 «умные» кнопки (лог + переход)
     st.markdown("<h4 class='section-title'>Быстрая связь со мной</h4>", unsafe_allow_html=True)
-    cta1, cta2, cta3 = st.columns([1.2, 1, 1.4])
+    cta1, cta2, cta3 = st.columns([1, 1, 4])
     with cta1:
         log_and_open("📨 Открыть Telegram", "https://t.me/cldmatv",
                      page_name="Главная", event_name="tg_click", key="tg_main")
