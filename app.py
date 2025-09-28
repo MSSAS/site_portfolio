@@ -339,7 +339,8 @@ elif page == "A/B-тесты":
         with k3: st.metric("p-value", f"{p_val:.2e}")
         with k4: st.metric("99% доверительный интервал", f"[{ci_low_pp:.2f}; {ci_high_pp:.2f}]")
         st.caption(f"Guardrails: TTFP p={p_ttfp:.4f}, Crash p={p_crash:.4f} · SRM p={srm_p:.4g}")
-
+        # Финальный вердикт
+        st.success("Вердикт: SUCCESS — раскатка 25%→50%→100% + пост-мониторинг.")
         st.markdown("---")
 
         # ===== 3) График + материалы =====
@@ -353,15 +354,9 @@ elif page == "A/B-тесты":
                 st.info("Добавь `assets/ab_streaming_daily.png` — график появится здесь.")
         with g2:
             st.markdown("#### Материалы")
-            log_and_open("📓 Ноутбук", "https://example.com/ab_streaming_notebook",
-                        page_name="A/B-тесты", event_name="open_nb_stream", key="nb_stream")
-            log_and_open("🗂️ CSV", "https://example.com/ab_streaming_positive_unequal.csv",
-                        page_name="A/B-тесты", event_name="open_csv_stream", key="csv_stream")
-            log_and_open("📝 Описание", "https://example.com/ab_streaming_case",
-                        page_name="A/B-тесты", event_name="open_md_stream", key="md_stream")
+            st.link_button("Код на GitHub", "https://github.com/MSSAS/abtest-streaming-homefeed") 
 
-        # Финальный вердикт
-        st.success("Вердикт: SUCCESS — раскатка 25%→50%→100% + пост-мониторинг.")
+        
         
 
     with tab2:
@@ -372,13 +367,13 @@ elif page == "A/B-тесты":
 - 📐 Проверка нормальности; t-test и χ²-тест.
 - 📈 Интерпретация p-value и доверительных интервалов.
         """)
-        st.markdown("##### Результаты (пример)")
+        st.markdown("##### Результаты")
         st.write("""
 - **A (контроль):** CR = 2.1%, ARPU = 1500 ₽  
 - **B (новая механика):** CR = 2.3%, ARPU = 1550 ₽  
 - **p-value (t-test ARPU):** 0.03 (< 0.05) — статистически значимо  
-- **Итог:** новую механику — рекомендовано к внедрению
         """)
+        st.success("Итог: SUCCESS — новую механику — рекомендовано к внедрению.")
         # твоя ссылка
         st.link_button("Код на GitHub", "https://github.com/MSSAS/AB-test_payment")
 
