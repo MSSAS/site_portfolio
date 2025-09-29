@@ -271,7 +271,7 @@ elif page == "Дашборды":
         iframe_code = """
         <iframe title="Аварийные объекты ЖКХ" width="1700" height="900" src="https://datalens.yandex/8ddgy8naysj4u"></iframe>
         """
-        components.html(iframe_code, height=800)
+        components.html(iframe_code, height=700)
     with tab2:
         st.subheader("📊 Аналитика продаж — Зарубежный маркетплейс")
         st.write("Задача: анализ продаж, прибыли, AKB, среднего чека и рентабельности по регионам и сегментам.")
