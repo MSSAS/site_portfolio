@@ -203,60 +203,60 @@ def log_and_open(label: str, url: str, page_name: str, event_name: str, key: str
 if page == "Главная":
     start_page_timer("Главная")
 
-    left, midle, right = st.columns([0.2, 0.6 ,0.2])
-    with midle:
+    left, _ = st.columns([0.8, 0.2])
+    with left:
         st.title("📊 Портфолио Матвея Спицына")
         st.markdown(
             "<div class='hero-subtitle'>Аналитик данных · SQL · Python · Power BI · A/B-тесты</div>",
             unsafe_allow_html=True
         )
 
-        st.header("Обо мне")
-        st.markdown("""
-            - 🎓 4 курс Сочинского госуниверситета («Цифровые технологии в аналитической деятельности»).
-            - 🧰 Стек: **SQL** (ClickHouse, PostgreSQL), **Python** (pandas, plotly, pingouin),
-            **BI** (DataLens, Power BI, Tableau), **Airflow**.
-            - 📊 Метрики: **CR, ARPU/ARPPU, Retention, DAU/WAU/MAU, Stickiness, CAC**
-            - 🧪 Эксперементы: бизнес-аспект эксперемента, дизайн эксперемента (a/b): MDE, мощность, стат. значимость, стат. критерий, размер групп.
-            - 🔊 Проводил интервьюирование ключевых сотрудников для выявление требований к ЭДО.
-            - 🚀 Ищу стажировку/джуниор-роль аналитика данных.
-                """)
+    st.header("Обо мне")
+    st.markdown("""
+- 🎓 4 курс Сочинского госуниверситета («Цифровые технологии в аналитической деятельности»).
+- 🧰 Стек: **SQL** (ClickHouse, PostgreSQL), **Python** (pandas, plotly, pingouin),
+  **BI** (DataLens, Power BI, Tableau), **Airflow**.
+- 📊 Метрики: **CR, ARPU/ARPPU, Retention, DAU/WAU/MAU, Stickiness, CAC**
+- 🧪 Эксперементы: бизнес-аспект эксперемента, дизайн эксперемента (a/b): MDE, мощность, стат. значимость, стат. критерий, размер групп.
+- 🔊 Проводил интервьюирование ключевых сотрудников для выявление требований к ЭДО.
+- 🚀 Ищу стажировку/джуниор-роль аналитика данных.
+    """)
 
-        st.markdown("<h4 class='section-title'>Навыки и инструменты</h4>", unsafe_allow_html=True)
-        st.markdown(
-            "<div class='chips'>"
-            "<span class='chip'>SQL</span><span class='chip'>ClickHouse</span><span class='chip'>PostgreSQL</span>"
-            "<span class='chip'>Python</span><span class='chip'>pandas</span><span class='chip'>plotly</span>"
-            "<span class='chip'>Power BI</span><span class='chip'>DataLens</span><span class='chip'>Tableau</span>"
-            "<span class='chip'>Airflow</span><span class='chip'>A/B-тесты</span><span class='chip'>Статистика</span>"
-            "</div>",
-            unsafe_allow_html=True
-        )
+    st.markdown("<h4 class='section-title'>Навыки и инструменты</h4>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='chips'>"
+        "<span class='chip'>SQL</span><span class='chip'>ClickHouse</span><span class='chip'>PostgreSQL</span>"
+        "<span class='chip'>Python</span><span class='chip'>pandas</span><span class='chip'>plotly</span>"
+        "<span class='chip'>Power BI</span><span class='chip'>DataLens</span><span class='chip'>Tableau</span>"
+        "<span class='chip'>Airflow</span><span class='chip'>A/B-тесты</span><span class='chip'>Статистика</span>"
+        "</div>",
+        unsafe_allow_html=True
+    )
 
-        st.markdown("<h4 class='section-title'>Чем могу быть полезен</h4>", unsafe_allow_html=True)
-        st.markdown("""
-            <ul class="tight">
-                <li>Дашборды под задачи бизнеса (DataLens/Power BI)</li>
-                <li>SQL-аналитика и регулярная отчётность</li>
-                <li>Подготовка/проведение <b>A/B-тестов</b>, интерпретация результатов</li>
-                <li>ETL</li>
-            </ul>
-            """, unsafe_allow_html=True)
+    st.markdown("<h4 class='section-title'>Чем могу быть полезен</h4>", unsafe_allow_html=True)
+    st.markdown("""
+        <ul class="tight">
+            <li>Дашборды под задачи бизнеса (DataLens/Power BI)</li>
+            <li>SQL-аналитика и регулярная отчётность</li>
+            <li>Подготовка/проведение <b>A/B-тестов</b>, интерпретация результатов</li>
+            <li>ETL</li>
+        </ul>
+        """, unsafe_allow_html=True)
 
-        # CTA: 3 «умные» кнопки (лог + переход)
-        st.markdown("<h4 class='section-title'>Быстрая связь со мной</h4>", unsafe_allow_html=True)
-        cta1, cta2, cta3 = st.columns([1, 1, 4])
-        with cta1:
-            log_and_open("📨 Открыть Telegram", "https://t.me/cldmatv",
-                        page_name="Главная", event_name="tg_click", key="tg_main")
-        with cta2:
-            log_and_open("🐱 Открыть GitHub", "https://github.com/MSSAS",
-                        page_name="Главная", event_name="gh_click", key="gh_main")
-        with cta3:
-            log_and_open("📄 Открыть резюме", "https://sochi.hh.ru/resume/b872d5b3ff0f3adc440039ed1f786c7a745332",
-                        page_name="Главная", event_name="resume_click", key="cv_main")
+    # CTA: 3 «умные» кнопки (лог + переход)
+    st.markdown("<h4 class='section-title'>Быстрая связь со мной</h4>", unsafe_allow_html=True)
+    cta1, cta2, cta3 = st.columns([1, 1, 4])
+    with cta1:
+        log_and_open("📨 Открыть Telegram", "https://t.me/cldmatv",
+                     page_name="Главная", event_name="tg_click", key="tg_main")
+    with cta2:
+        log_and_open("🐱 Открыть GitHub", "https://github.com/MSSAS",
+                     page_name="Главная", event_name="gh_click", key="gh_main")
+    with cta3:
+        log_and_open("📄 Открыть резюме", "https://sochi.hh.ru/resume/b872d5b3ff0f3adc440039ed1f786c7a745332",
+                     page_name="Главная", event_name="resume_click", key="cv_main")
 
-        finalize_time_on_rerun()
+    finalize_time_on_rerun()
 
 # --- Дашборды ---
 elif page == "Дашборды":
