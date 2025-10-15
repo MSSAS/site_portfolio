@@ -203,7 +203,7 @@ def log_and_open(label: str, url: str, page_name: str, event_name: str, key: str
 if page == "Главная":
     start_page_timer("Главная")
 
-    left, midle, right = st.columns([0.2, 0,6 ,0.2])
+    left, midle, right = st.columns([0.2, 0.6 ,0.2])
     with midle:
         st.title("📊 Портфолио Матвея Спицына")
         st.markdown(
